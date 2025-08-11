@@ -1,81 +1,32 @@
-
-import { Button } from "@/components/ui/button";
-import { TrendingUp, Menu, LogOut, User } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Header = () => {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-xl text-foreground">WealthWise</span>
-          </div>
-        </div>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>
+            <Link to="/">Home</Link>
+          </NavigationMenuTrigger>
+        </NavigationMenuItem>
 
-        <nav className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-muted-foreground hover:text-foreground transition-fast">
-            Features
-          </a>
-          <a href="#security" className="text-muted-foreground hover:text-foreground transition-fast">
-            Security
-          </a>
-          <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-fast">
-            Pricing
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span className="hidden md:inline">
-                    {user.user_metadata?.full_name || user.email}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <Button variant="ghost" className="hidden md:inline-flex" onClick={() => navigate('/auth')}>
-                Log In
-              </Button>
-              <Button variant="hero" onClick={() => navigate('/auth')}>
-                Get Started
-              </Button>
-            </>
-          )}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    </header>
+        <NavigationMenuItem>
+          <Link to="/dashboard">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Dashboard
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 };
 
