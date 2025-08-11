@@ -1,5 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Shield, Brain } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/finance-hero.jpg";
 
 const Hero = () => {
@@ -22,9 +24,11 @@ const Hero = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="lg" className="text-lg px-8 py-6">
-                Start Your Journey
-              </Button>
+              <Link to="/onboarding">
+                <Button variant="hero" size="lg" className="text-lg px-8 py-6">
+                  Start Your Journey
+                </Button>
+              </Link>
               <Button variant="outline" size="lg" className="text-lg px-8 py-6">
                 Watch Demo
               </Button>
