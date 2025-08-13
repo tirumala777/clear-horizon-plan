@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Building, Target, DollarSign, Upload } from 'lucide-react';
+import { Building, Target, DollarSign, Upload } from 'lucide-react';
+import CompanyInfoStep from '@/components/onboarding/CompanyInfoStep';
+import FinancialDataStep from '@/components/onboarding/FinancialDataStep';
+import GoalsVisionStep from '@/components/onboarding/GoalsVisionStep';
+import CompletionStep from '@/components/onboarding/CompletionStep';
+import AdBanner from '@/components/advertisements/AdBanner';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -29,11 +30,14 @@ const Onboarding = () => {
     { id: 4, title: 'Data Integration', icon: Upload }
   ];
 
+  const updateFormData = (data: Partial<typeof formData>) => {
+    setFormData({ ...formData, ...data });
+  };
+
   const handleNext = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Complete onboarding and redirect to dashboard
       navigate('/dashboard');
     }
   };
@@ -47,127 +51,13 @@ const Onboarding = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input
-                id="companyName"
-                value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                placeholder="Enter your company name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Select onValueChange={(value) => setFormData({ ...formData, industry: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="healthcare">Healthcare</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="retail">Retail</SelectItem>
-                  <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                  <SelectItem value="consulting">Consulting</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="companySize">Company Size</Label>
-              <Select onValueChange={(value) => setFormData({ ...formData, companySize: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-10">1-10 employees</SelectItem>
-                  <SelectItem value="11-50">11-50 employees</SelectItem>
-                  <SelectItem value="51-200">51-200 employees</SelectItem>
-                  <SelectItem value="201-500">201-500 employees</SelectItem>
-                  <SelectItem value="500+">500+ employees</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
+        return <CompanyInfoStep formData={formData} updateFormData={updateFormData} />;
       case 2:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="monthlyRevenue">Monthly Revenue (USD)</Label>
-              <Input
-                id="monthlyRevenue"
-                type="number"
-                value={formData.monthlyRevenue}
-                onChange={(e) => setFormData({ ...formData, monthlyRevenue: e.target.value })}
-                placeholder="e.g., 50000"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="p-4">
-                <h4 className="font-semibold mb-2">QuickBooks</h4>
-                <p className="text-sm text-muted-foreground mb-3">Connect your accounting data</p>
-                <Button variant="outline" size="sm">Connect</Button>
-              </Card>
-              <Card className="p-4">
-                <h4 className="font-semibold mb-2">Bank Account</h4>
-                <p className="text-sm text-muted-foreground mb-3">Sync transaction data</p>
-                <Button variant="outline" size="sm">Connect</Button>
-              </Card>
-            </div>
-          </div>
-        );
+        return <FinancialDataStep formData={formData} updateFormData={updateFormData} />;
       case 3:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="goals">Primary Business Goals</Label>
-              <Textarea
-                id="goals"
-                value={formData.goals}
-                onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
-                placeholder="e.g., Reach $100K monthly revenue, expand to new markets..."
-                rows={4}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="challenges">Current Challenges</Label>
-              <Textarea
-                id="challenges"
-                value={formData.challenges}
-                onChange={(e) => setFormData({ ...formData, challenges: e.target.value })}
-                placeholder="e.g., High customer acquisition costs, cash flow management..."
-                rows={4}
-              />
-            </div>
-          </div>
-        );
+        return <GoalsVisionStep formData={formData} updateFormData={updateFormData} />;
       case 4:
-        return (
-          <div className="space-y-6 text-center">
-            <CheckCircle className="w-16 h-16 text-success mx-auto" />
-            <h3 className="text-2xl font-bold">You're All Set!</h3>
-            <p className="text-muted-foreground">
-              Your Catalyst workspace is ready. Our AI is already analyzing your data to provide personalized insights.
-            </p>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-semibold">Dashboard Ready</h4>
-                <p className="text-muted-foreground">Personalized for your business</p>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-semibold">AI Insights</h4>
-                <p className="text-muted-foreground">Generating recommendations</p>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-semibold">Growth Tracking</h4>
-                <p className="text-muted-foreground">Monitoring your progress</p>
-              </div>
-            </div>
-          </div>
-        );
+        return <CompletionStep />;
       default:
         return null;
     }
@@ -180,6 +70,8 @@ const Onboarding = () => {
           <h1 className="text-3xl font-bold text-center mb-4">Welcome to Catalyst</h1>
           <p className="text-muted-foreground text-center">Let's set up your business growth platform</p>
         </div>
+
+        <AdBanner />
 
         <div className="mb-8">
           <Progress value={(currentStep / 4) * 100} className="h-2" />

@@ -8,6 +8,7 @@ import FinancialHealthMap from '@/components/dashboard/FinancialHealthMap';
 import AIInsights from '@/components/dashboard/AIInsights';
 import WhatIfScenarios from '@/components/dashboard/WhatIfScenarios';
 import MilestoneTracker from '@/components/dashboard/MilestoneTracker';
+import AdBanner from '@/components/advertisements/AdBanner';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -28,6 +29,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       <main className="container mx-auto px-4 py-8 space-y-8">
+        <AdBanner />
         <GrowthOverview />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <FinancialHealthMap />
