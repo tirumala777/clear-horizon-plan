@@ -30,6 +30,11 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const getCurrentStatIcon = () => {
+    const IconComponent = stats[currentStat].icon;
+    return <IconComponent className="w-6 h-6 text-primary" />;
+  };
+
   return (
     <section className="pt-16 min-h-screen flex items-center bg-gradient-to-br from-background via-background to-muted/30 relative overflow-hidden">
       {/* Animated background elements */}
@@ -71,7 +76,7 @@ const Hero = () => {
                   <p className="text-muted-foreground">{stats[currentStat].label}</p>
                 </div>
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  {React.createElement(stats[currentStat].icon, { className: "w-6 h-6 text-primary" })}
+                  {getCurrentStatIcon()}
                 </div>
               </div>
             </div>
