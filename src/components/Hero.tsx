@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Shield, Brain, Play, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
