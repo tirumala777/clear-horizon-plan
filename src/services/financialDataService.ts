@@ -46,6 +46,15 @@ export interface PortfolioHolding {
   user_id?: string;
 }
 
+// Type guards for runtime validation
+const isValidTransactionType = (type: string): type is 'income' | 'expense' => {
+  return type === 'income' || type === 'expense';
+};
+
+const isValidInsuranceStatus = (status: string): status is 'active' | 'expired' | 'cancelled' => {
+  return status === 'active' || status === 'expired' || status === 'cancelled';
+};
+
 // Input validation functions
 export const validateTransaction = (transaction: Partial<Transaction>): string[] => {
   const errors: string[] = [];
@@ -97,7 +106,16 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     throw error;
   }
 
-  return data || [];
+  // Map database records to our Transaction interface with type validation
+  return (data || []).map(record => ({
+    id: record.id,
+    date: record.date,
+    description: record.description,
+    amount: record.amount,
+    category: record.category,
+    type: isValidTransactionType(record.type) ? record.type : 'expense',
+    user_id: record.user_id
+  }));
 };
 
 export const createTransaction = async (transaction: Omit<Transaction, 'id' | 'user_id'>): Promise<Transaction> => {
@@ -123,7 +141,15 @@ export const createTransaction = async (transaction: Omit<Transaction, 'id' | 'u
     throw error;
   }
 
-  return data;
+  return {
+    id: data.id,
+    date: data.date,
+    description: data.description,
+    amount: data.amount,
+    category: data.category,
+    type: isValidTransactionType(data.type) ? data.type : 'expense',
+    user_id: data.user_id
+  };
 };
 
 export const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<Transaction> => {
@@ -150,7 +176,15 @@ export const updateTransaction = async (id: string, updates: Partial<Transaction
     throw error;
   }
 
-  return data;
+  return {
+    id: data.id,
+    date: data.date,
+    description: data.description,
+    amount: data.amount,
+    category: data.category,
+    type: isValidTransactionType(data.type) ? data.type : 'expense',
+    user_id: data.user_id
+  };
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {
@@ -184,7 +218,16 @@ export const getFinancialGoals = async (): Promise<FinancialGoal[]> => {
     throw error;
   }
 
-  return data || [];
+  // Map database records to our FinancialGoal interface
+  return (data || []).map(record => ({
+    id: record.id,
+    title: record.title,
+    targetAmount: record.target_amount,
+    currentAmount: record.current_amount,
+    deadline: record.deadline,
+    category: record.category,
+    user_id: record.user_id
+  }));
 };
 
 export const createFinancialGoal = async (goal: Omit<FinancialGoal, 'id' | 'user_id'>): Promise<FinancialGoal> => {
@@ -199,7 +242,11 @@ export const createFinancialGoal = async (goal: Omit<FinancialGoal, 'id' | 'user
   const { data, error } = await supabase
     .from('financial_goals')
     .insert({
-      ...goal,
+      title: goal.title,
+      target_amount: goal.targetAmount,
+      current_amount: goal.currentAmount,
+      deadline: goal.deadline,
+      category: goal.category,
       user_id: user.id
     })
     .select()
@@ -210,7 +257,15 @@ export const createFinancialGoal = async (goal: Omit<FinancialGoal, 'id' | 'user
     throw error;
   }
 
-  return data;
+  return {
+    id: data.id,
+    title: data.title,
+    targetAmount: data.target_amount,
+    currentAmount: data.current_amount,
+    deadline: data.deadline,
+    category: data.category,
+    user_id: data.user_id
+  };
 };
 
 // Insurance Policy services
@@ -228,7 +283,18 @@ export const getInsurancePolicies = async (): Promise<InsurancePolicy[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(record => ({
+    id: record.id,
+    policy_name: record.policy_name,
+    provider: record.provider,
+    policy_type: record.policy_type,
+    coverage_amount: record.coverage_amount || 0,
+    premium_amount: record.premium_amount || 0,
+    start_date: record.start_date || '',
+    end_date: record.end_date || '',
+    status: isValidInsuranceStatus(record.status) ? record.status : 'active',
+    user_id: record.user_id
+  }));
 };
 
 export const createInsurancePolicy = async (policy: Omit<InsurancePolicy, 'id' | 'user_id'>): Promise<InsurancePolicy> => {
@@ -249,7 +315,18 @@ export const createInsurancePolicy = async (policy: Omit<InsurancePolicy, 'id' |
     throw error;
   }
 
-  return data;
+  return {
+    id: data.id,
+    policy_name: data.policy_name,
+    provider: data.provider,
+    policy_type: data.policy_type,
+    coverage_amount: data.coverage_amount || 0,
+    premium_amount: data.premium_amount || 0,
+    start_date: data.start_date || '',
+    end_date: data.end_date || '',
+    status: isValidInsuranceStatus(data.status) ? data.status : 'active',
+    user_id: data.user_id
+  };
 };
 
 // Portfolio Holdings services
