@@ -8,49 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Shield, Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Insurance {
-  id: string;
-  type: string;
-  provider: string;
-  premium: number;
-  coverage: number;
-  deductible: number;
-  expiryDate: string;
-  status: 'active' | 'expired' | 'pending';
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getInsurancePolicies,
+  createInsurancePolicy,
+  InsurancePolicy
+} from '@/services/financialDataService';
 
 const InsuranceManager = () => {
-  const [insurances, setInsurances] = useState<Insurance[]>([
-    {
-      id: '1',
-      type: 'Life Insurance',
-      provider: 'MetLife',
-      premium: 250,
-      coverage: 500000,
-      deductible: 0,
-      expiryDate: '2025-12-31',
-      status: 'active'
-    },
-    {
-      id: '2',
-      type: 'Health Insurance',
-      provider: 'Blue Cross',
-      premium: 450,
-      coverage: 50000,
-      deductible: 2500,
-      expiryDate: '2024-06-30',
-      status: 'active'
-    }
-  ]);
-
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [newInsurance, setNewInsurance] = useState({
-    type: '',
+    policy_name: '',
     provider: '',
-    premium: '',
-    coverage: '',
-    deductible: '',
-    expiryDate: ''
+    policy_type: '',
+    premium_amount: '',
+    coverage_amount: '',
+    start_date: '',
+    end_date: ''
   });
 
   const insuranceTypes = [
@@ -62,40 +39,104 @@ const InsuranceManager = () => {
     'Travel Insurance'
   ];
 
-  const addInsurance = () => {
-    if (!newInsurance.type || !newInsurance.provider || !newInsurance.premium) {
-      toast.error('Please fill in required fields');
+  // Query for insurance policies
+  const { data: insurances = [], isLoading, error } = useQuery({
+    queryKey: ['insurance_policies'],
+    queryFn: getInsurancePolicies,
+    enabled: !!user,
+  });
+
+  // Mutation for creating insurance policies
+  const createInsuranceMutation = useMutation({
+    mutationFn: createInsurancePolicy,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['insurance_policies'] });
+      setNewInsurance({ 
+        policy_name: '', 
+        provider: '', 
+        policy_type: '', 
+        premium_amount: '', 
+        coverage_amount: '', 
+        start_date: '', 
+        end_date: '' 
+      });
+      toast.success('Insurance policy added successfully');
+    },
+    onError: (error: Error) => {
+      console.error('Error creating insurance policy:', error);
+      toast.error('Failed to add insurance policy');
+    },
+  });
+
+  const handleAddInsurance = () => {
+    if (!user) {
+      toast.error('Please sign in to add insurance policies');
       return;
     }
 
-    const insurance: Insurance = {
-      id: Date.now().toString(),
-      type: newInsurance.type,
-      provider: newInsurance.provider,
-      premium: parseFloat(newInsurance.premium),
-      coverage: parseFloat(newInsurance.coverage) || 0,
-      deductible: parseFloat(newInsurance.deductible) || 0,
-      expiryDate: newInsurance.expiryDate,
-      status: new Date(newInsurance.expiryDate) > new Date() ? 'active' : 'expired'
+    if (!newInsurance.policy_name.trim() || !newInsurance.provider.trim() || !newInsurance.policy_type) {
+      toast.error('Please fill in required fields (Policy Name, Provider, Type)');
+      return;
+    }
+
+    const premiumAmount = parseFloat(newInsurance.premium_amount);
+    const coverageAmount = parseFloat(newInsurance.coverage_amount);
+
+    if (newInsurance.premium_amount && (isNaN(premiumAmount) || premiumAmount < 0)) {
+      toast.error('Premium amount must be a valid positive number');
+      return;
+    }
+
+    if (newInsurance.coverage_amount && (isNaN(coverageAmount) || coverageAmount < 0)) {
+      toast.error('Coverage amount must be a valid positive number');
+      return;
+    }
+
+    const insuranceData = {
+      policy_name: newInsurance.policy_name.trim(),
+      provider: newInsurance.provider.trim(),
+      policy_type: newInsurance.policy_type,
+      premium_amount: premiumAmount || 0,
+      coverage_amount: coverageAmount || 0,
+      start_date: newInsurance.start_date || new Date().toISOString().split('T')[0],
+      end_date: newInsurance.end_date,
+      status: 'active' as const
     };
 
-    setInsurances([...insurances, insurance]);
-    setNewInsurance({ type: '', provider: '', premium: '', coverage: '', deductible: '', expiryDate: '' });
-    toast.success('Insurance policy added successfully');
-  };
-
-  const deleteInsurance = (id: string) => {
-    setInsurances(insurances.filter(ins => ins.id !== id));
-    toast.success('Insurance policy removed');
+    createInsuranceMutation.mutate(insuranceData);
   };
 
   const getTotalPremiums = () => {
-    return insurances.reduce((sum, ins) => sum + ins.premium, 0);
+    return insurances.reduce((sum, ins) => sum + (ins.premium_amount || 0), 0);
   };
 
   const getTotalCoverage = () => {
-    return insurances.reduce((sum, ins) => sum + ins.coverage, 0);
+    return insurances.reduce((sum, ins) => sum + (ins.coverage_amount || 0), 0);
   };
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-muted-foreground">
+            Please sign in to access your insurance policies.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-destructive">
+            Error loading insurance policies. Please try again.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -146,17 +187,13 @@ const InsuranceManager = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Insurance Type *</Label>
-              <Select onValueChange={(value) => setNewInsurance({...newInsurance, type: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {insuranceTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Policy Name *</Label>
+              <Input
+                value={newInsurance.policy_name}
+                onChange={(e) => setNewInsurance({...newInsurance, policy_name: e.target.value})}
+                placeholder="Policy name"
+                maxLength={200}
+              />
             </div>
             <div>
               <Label>Provider *</Label>
@@ -164,17 +201,35 @@ const InsuranceManager = () => {
                 value={newInsurance.provider}
                 onChange={(e) => setNewInsurance({...newInsurance, provider: e.target.value})}
                 placeholder="Insurance provider"
+                maxLength={200}
               />
             </div>
           </div>
+
+          <div>
+            <Label>Insurance Type *</Label>
+            <Select onValueChange={(value) => setNewInsurance({...newInsurance, policy_type: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {insuranceTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Monthly Premium *</Label>
+              <Label>Monthly Premium</Label>
               <Input
                 type="number"
-                value={newInsurance.premium}
-                onChange={(e) => setNewInsurance({...newInsurance, premium: e.target.value})}
+                step="0.01"
+                min="0"
+                max="999999"
+                value={newInsurance.premium_amount}
+                onChange={(e) => setNewInsurance({...newInsurance, premium_amount: e.target.value})}
                 placeholder="250"
               />
             </div>
@@ -182,34 +237,41 @@ const InsuranceManager = () => {
               <Label>Coverage Amount</Label>
               <Input
                 type="number"
-                value={newInsurance.coverage}
-                onChange={(e) => setNewInsurance({...newInsurance, coverage: e.target.value})}
+                min="0"
+                max="99999999999"
+                value={newInsurance.coverage_amount}
+                onChange={(e) => setNewInsurance({...newInsurance, coverage_amount: e.target.value})}
                 placeholder="500000"
               />
             </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Deductible</Label>
+              <Label>Start Date</Label>
               <Input
-                type="number"
-                value={newInsurance.deductible}
-                onChange={(e) => setNewInsurance({...newInsurance, deductible: e.target.value})}
-                placeholder="2500"
+                type="date"
+                value={newInsurance.start_date}
+                onChange={(e) => setNewInsurance({...newInsurance, start_date: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={newInsurance.end_date}
+                onChange={(e) => setNewInsurance({...newInsurance, end_date: e.target.value})}
               />
             </div>
           </div>
           
-          <div>
-            <Label>Expiry Date</Label>
-            <Input
-              type="date"
-              value={newInsurance.expiryDate}
-              onChange={(e) => setNewInsurance({...newInsurance, expiryDate: e.target.value})}
-            />
-          </div>
-          
-          <Button onClick={addInsurance} className="w-full">
+          <Button 
+            onClick={handleAddInsurance} 
+            className="w-full"
+            disabled={createInsuranceMutation.isPending}
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Add Insurance Policy
+            {createInsuranceMutation.isPending ? 'Adding...' : 'Add Insurance Policy'}
           </Button>
         </CardContent>
       </Card>
@@ -220,47 +282,60 @@ const InsuranceManager = () => {
           <CardTitle>Your Insurance Policies</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {insurances.map(insurance => (
-              <div key={insurance.id} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <h4 className="font-semibold">{insurance.type}</h4>
-                    <Badge variant={insurance.status === 'active' ? 'default' : 'destructive'}>
-                      {insurance.status}
-                    </Badge>
+          {isLoading ? (
+            <div className="text-center py-8">Loading insurance policies...</div>
+          ) : (
+            <div className="space-y-4">
+              {insurances.map(insurance => (
+                <div key={insurance.id} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-semibold">{insurance.policy_name}</h4>
+                      <Badge variant={insurance.status === 'active' ? 'default' : 'destructive'}>
+                        {insurance.status}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="ghost">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="ghost">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => deleteInsurance(insurance.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Provider</p>
+                      <p className="font-medium">{insurance.provider}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Type</p>
+                      <p className="font-medium">{insurance.policy_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Premium</p>
+                      <p className="font-medium">
+                        {insurance.premium_amount ? `$${insurance.premium_amount}/month` : 'Not set'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Coverage</p>
+                      <p className="font-medium">
+                        {insurance.coverage_amount ? `$${insurance.coverage_amount.toLocaleString()}` : 'Not set'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Provider</p>
-                    <p className="font-medium">{insurance.provider}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Premium</p>
-                    <p className="font-medium">${insurance.premium}/month</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Coverage</p>
-                    <p className="font-medium">${insurance.coverage.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Expires</p>
-                    <p className="font-medium">{insurance.expiryDate}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+              {insurances.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  No insurance policies yet. Add your first policy above.
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -8,28 +8,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, Edit, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  category: string;
-  type: 'income' | 'expense';
-}
-
-interface FinancialGoal {
-  id: string;
-  title: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline: string;
-  category: string;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+  Transaction,
+  validateTransaction
+} from '@/services/financialDataService';
 
 const FinancialDataManager = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [goals, setGoals] = useState<FinancialGoal[]>([]);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [newTransaction, setNewTransaction] = useState({
     description: '',
     amount: '',
@@ -51,60 +44,120 @@ const FinancialDataManager = () => {
     'Other'
   ];
 
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    const savedTransactions = localStorage.getItem('financial_transactions');
-    const savedGoals = localStorage.getItem('financial_goals');
-    
-    if (savedTransactions) {
-      setTransactions(JSON.parse(savedTransactions));
-    }
-    if (savedGoals) {
-      setGoals(JSON.parse(savedGoals));
-    }
-  }, []);
+  // Query for transactions
+  const { data: transactions = [], isLoading, error } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: getTransactions,
+    enabled: !!user,
+  });
 
-  // Save data to localStorage whenever transactions or goals change
-  useEffect(() => {
-    localStorage.setItem('financial_transactions', JSON.stringify(transactions));
-  }, [transactions]);
+  // Mutation for creating transactions
+  const createTransactionMutation = useMutation({
+    mutationFn: createTransaction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setNewTransaction({ description: '', amount: '', category: '', type: 'expense' });
+      toast.success('Transaction added successfully');
+    },
+    onError: (error: Error) => {
+      console.error('Error creating transaction:', error);
+      toast.error(error.message || 'Failed to add transaction');
+    },
+  });
 
-  useEffect(() => {
-    localStorage.setItem('financial_goals', JSON.stringify(goals));
-  }, [goals]);
+  // Mutation for updating transactions
+  const updateTransactionMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Transaction> }) =>
+      updateTransaction(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setEditingTransaction(null);
+      toast.success('Transaction updated');
+    },
+    onError: (error: Error) => {
+      console.error('Error updating transaction:', error);
+      toast.error(error.message || 'Failed to update transaction');
+    },
+  });
 
-  const addTransaction = () => {
-    if (!newTransaction.description || !newTransaction.amount || !newTransaction.category) {
-      toast.error('Please fill in all fields');
+  // Mutation for deleting transactions
+  const deleteTransactionMutation = useMutation({
+    mutationFn: deleteTransaction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction deleted');
+    },
+    onError: (error: Error) => {
+      console.error('Error deleting transaction:', error);
+      toast.error('Failed to delete transaction');
+    },
+  });
+
+  const handleAddTransaction = () => {
+    if (!user) {
+      toast.error('Please sign in to add transactions');
       return;
     }
 
-    const transaction: Transaction = {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      description: newTransaction.description,
+    const transactionData = {
+      description: newTransaction.description.trim(),
       amount: parseFloat(newTransaction.amount),
       category: newTransaction.category,
-      type: newTransaction.type
+      type: newTransaction.type,
+      date: new Date().toISOString().split('T')[0]
     };
 
-    setTransactions([transaction, ...transactions]);
-    setNewTransaction({ description: '', amount: '', category: '', type: 'expense' });
-    toast.success('Transaction added successfully');
+    const errors = validateTransaction(transactionData);
+    if (errors.length > 0) {
+      toast.error(errors.join(', '));
+      return;
+    }
+
+    createTransactionMutation.mutate(transactionData);
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(transactions.filter(t => t.id !== id));
-    toast.success('Transaction deleted');
+  const handleUpdateTransaction = (id: string, field: keyof Transaction, value: any) => {
+    if (!user) {
+      toast.error('Please sign in to update transactions');
+      return;
+    }
+
+    const updates = { [field]: value };
+    updateTransactionMutation.mutate({ id, updates });
   };
 
-  const updateTransaction = (id: string, updatedTransaction: Partial<Transaction>) => {
-    setTransactions(transactions.map(t => 
-      t.id === id ? { ...t, ...updatedTransaction } : t
-    ));
-    setEditingTransaction(null);
-    toast.success('Transaction updated');
+  const handleDeleteTransaction = (id: string) => {
+    if (!user) {
+      toast.error('Please sign in to delete transactions');
+      return;
+    }
+
+    deleteTransactionMutation.mutate(id);
   };
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-muted-foreground">
+            Please sign in to access your financial data.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-destructive">
+            Error loading transactions. Please try again.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -116,20 +169,23 @@ const FinancialDataManager = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description *</Label>
               <Input
                 id="description"
                 value={newTransaction.description}
                 onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})}
                 placeholder="Transaction description"
+                maxLength={200}
               />
             </div>
             <div>
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Amount *</Label>
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
+                min="0"
+                max="999999999"
                 value={newTransaction.amount}
                 onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
                 placeholder="0.00"
@@ -138,8 +194,11 @@ const FinancialDataManager = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="category">Category</Label>
-              <Select onValueChange={(value) => setNewTransaction({...newTransaction, category: value})}>
+              <Label htmlFor="category">Category *</Label>
+              <Select 
+                onValueChange={(value) => setNewTransaction({...newTransaction, category: value})}
+                value={newTransaction.category}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -151,8 +210,11 @@ const FinancialDataManager = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="type">Type</Label>
-              <Select onValueChange={(value) => setNewTransaction({...newTransaction, type: value as 'income' | 'expense'})}>
+              <Label htmlFor="type">Type *</Label>
+              <Select 
+                onValueChange={(value) => setNewTransaction({...newTransaction, type: value as 'income' | 'expense'})}
+                value={newTransaction.type}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -163,9 +225,13 @@ const FinancialDataManager = () => {
               </Select>
             </div>
           </div>
-          <Button onClick={addTransaction} className="w-full">
+          <Button 
+            onClick={handleAddTransaction} 
+            className="w-full"
+            disabled={createTransactionMutation.isPending}
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Add Transaction
+            {createTransactionMutation.isPending ? 'Adding...' : 'Add Transaction'}
           </Button>
         </CardContent>
       </Card>
@@ -176,80 +242,89 @@ const FinancialDataManager = () => {
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {transactions.slice(0, 10).map(transaction => (
-              <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  {editingTransaction === transaction.id ? (
-                    <div className="grid grid-cols-4 gap-2">
-                      <Input
-                        defaultValue={transaction.description}
-                        onBlur={(e) => updateTransaction(transaction.id, { description: e.target.value })}
-                      />
-                      <Input
-                        type="number"
-                        step="0.01"
-                        defaultValue={transaction.amount}
-                        onBlur={(e) => updateTransaction(transaction.id, { amount: parseFloat(e.target.value) })}
-                      />
-                      <Select onValueChange={(value) => updateTransaction(transaction.id, { category: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={transaction.category} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex gap-1">
-                        <Button size="sm" onClick={() => setEditingTransaction(null)}>
-                          <Save className="w-3 h-3" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => setEditingTransaction(null)}>
-                          <X className="w-3 h-3" />
-                        </Button>
+          {isLoading ? (
+            <div className="text-center py-8">Loading transactions...</div>
+          ) : (
+            <div className="space-y-2">
+              {transactions.slice(0, 10).map(transaction => (
+                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    {editingTransaction === transaction.id ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        <Input
+                          defaultValue={transaction.description}
+                          onBlur={(e) => handleUpdateTransaction(transaction.id, 'description', e.target.value)}
+                          maxLength={200}
+                        />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="999999999"
+                          defaultValue={transaction.amount}
+                          onBlur={(e) => handleUpdateTransaction(transaction.id, 'amount', parseFloat(e.target.value) || 0)}
+                        />
+                        <Select onValueChange={(value) => handleUpdateTransaction(transaction.id, 'category', value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={transaction.category} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map(category => (
+                              <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => setEditingTransaction(null)}>
+                            <Save className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingTransaction(null)}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{transaction.description}</span>
-                        <span className={`font-bold ${transaction.type === 'income' ? 'text-success' : 'text-danger'}`}>
-                          {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="outline">{transaction.category}</Badge>
-                        <span>{transaction.date}</span>
-                      </div>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{transaction.description}</span>
+                          <span className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline">{transaction.category}</Badge>
+                          <span>{transaction.date}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex gap-1 ml-4">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setEditingTransaction(transaction.id)}
+                      disabled={updateTransactionMutation.isPending}
+                    >
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteTransaction(transaction.id)}
+                      disabled={deleteTransactionMutation.isPending}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-1 ml-4">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setEditingTransaction(transaction.id)}
-                  >
-                    <Edit className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => deleteTransaction(transaction.id)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {transactions.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No transactions yet. Add your first transaction above.
-              </p>
-            )}
-          </div>
+              ))}
+              {transactions.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  No transactions yet. Add your first transaction above.
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
