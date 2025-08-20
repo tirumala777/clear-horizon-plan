@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Plus, Target, PieChart } from 'lucide-react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { formatINR, formatINRLarge } from '@/services/financialDataService';
 
 interface Holding {
   id: string;
@@ -22,42 +23,42 @@ const PortfolioTracker = () => {
   const [holdings, setHoldings] = useState<Holding[]>([
     {
       id: '1',
-      symbol: 'AAPL',
-      name: 'Apple Inc.',
+      symbol: 'RELIANCE',
+      name: 'Reliance Industries Ltd.',
       shares: 50,
-      currentPrice: 175.50,
-      purchasePrice: 165.00,
-      sector: 'Technology',
+      currentPrice: 2450.50,
+      purchasePrice: 2300.00,
+      sector: 'Oil & Gas',
       type: 'stock'
     },
     {
       id: '2',
-      symbol: 'TSLA',
-      name: 'Tesla Inc.',
+      symbol: 'TCS',
+      name: 'Tata Consultancy Services',
       shares: 25,
-      currentPrice: 245.80,
-      purchasePrice: 220.00,
-      sector: 'Technology',
+      currentPrice: 3680.80,
+      purchasePrice: 3500.00,
+      sector: 'Information Technology',
       type: 'stock'
     },
     {
       id: '3',
-      symbol: 'VOO',
-      name: 'Vanguard S&P 500 ETF',
+      symbol: 'NIFTYBEES',
+      name: 'Nippon India ETF Nifty BeES',
       shares: 100,
-      currentPrice: 410.30,
-      purchasePrice: 395.00,
+      currentPrice: 205.30,
+      purchasePrice: 195.00,
       sector: 'Diversified',
       type: 'etf'
     },
     {
       id: '4',
-      symbol: 'BND',
-      name: 'Vanguard Bond Index',
+      symbol: 'BHARAT22ETF',
+      name: 'Bharat 22 ETF',
       shares: 150,
-      currentPrice: 78.90,
-      purchasePrice: 82.00,
-      sector: 'Bonds',
+      currentPrice: 47.90,
+      purchasePrice: 52.00,
+      sector: 'Government Securities',
       type: 'bond'
     }
   ]);
@@ -126,13 +127,13 @@ const PortfolioTracker = () => {
   const assetAllocation = getAssetAllocation();
   const sectorAllocation = getSectorAllocation();
 
-  // Mock performance data
+  // Mock performance data in INR
   const performanceData = [
-    { date: '2024-01', value: 85000 },
-    { date: '2024-02', value: 87500 },
-    { date: '2024-03', value: 86200 },
-    { date: '2024-04', value: 89800 },
-    { date: '2024-05', value: 92100 },
+    { date: '2024-01', value: 425000 },
+    { date: '2024-02', value: 437500 },
+    { date: '2024-03', value: 431000 },
+    { date: '2024-04', value: 449000 },
+    { date: '2024-05', value: 461000 },
     { date: '2024-06', value: metrics.totalValue }
   ];
 
@@ -145,7 +146,7 @@ const PortfolioTracker = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Value</p>
-                <p className="text-2xl font-bold">${metrics.totalValue.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatINRLarge(metrics.totalValue)}</p>
               </div>
               <PieChart className="w-8 h-8 text-primary" />
             </div>
@@ -157,7 +158,7 @@ const PortfolioTracker = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Cost</p>
-                <p className="text-2xl font-bold">${metrics.totalCost.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatINRLarge(metrics.totalCost)}</p>
               </div>
               <Target className="w-8 h-8 text-muted-foreground" />
             </div>
@@ -170,7 +171,7 @@ const PortfolioTracker = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Total Gain/Loss</p>
                 <p className={`text-2xl font-bold ${metrics.totalGainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
-                  ${metrics.totalGainLoss.toLocaleString()}
+                  {formatINRLarge(metrics.totalGainLoss)}
                 </p>
               </div>
               {metrics.totalGainLoss >= 0 ? 
@@ -210,8 +211,8 @@ const PortfolioTracker = () => {
               <LineChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Value']} />
+                <YAxis tickFormatter={(value) => formatINRLarge(value)} />
+                <Tooltip formatter={(value) => [formatINR(Number(value)), 'Value']} />
                 <Line 
                   type="monotone" 
                   dataKey="value" 
@@ -294,7 +295,7 @@ const PortfolioTracker = () => {
                       <Badge variant="outline">{holding.type.toUpperCase()}</Badge>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${currentValue.toLocaleString()}</p>
+                      <p className="font-semibold">{formatINRLarge(currentValue)}</p>
                       <div className="flex items-center gap-1">
                         {gainLoss >= 0 ? 
                           <TrendingUp className="w-3 h-3 text-success" /> : 
@@ -314,16 +315,16 @@ const PortfolioTracker = () => {
                     </div>
                     <div>
                       <p className="text-muted-foreground">Current Price</p>
-                      <p className="font-medium">${holding.currentPrice}</p>
+                      <p className="font-medium">{formatINR(holding.currentPrice)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Purchase Price</p>
-                      <p className="font-medium">${holding.purchasePrice}</p>
+                      <p className="font-medium">{formatINR(holding.purchasePrice)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Gain/Loss</p>
                       <p className={`font-medium ${gainLoss >= 0 ? 'text-success' : 'text-danger'}`}>
-                        ${gainLoss.toLocaleString()}
+                        {formatINRLarge(gainLoss)}
                       </p>
                     </div>
                     <div>
