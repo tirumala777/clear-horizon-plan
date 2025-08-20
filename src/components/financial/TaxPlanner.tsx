@@ -8,31 +8,31 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Calculator, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatINR, formatINRLarge } from '@/services/financialDataService';
 
 const TaxPlanner = () => {
   const [taxData, setTaxData] = useState({
-    income: 75000,
-    deductions: 12000,
-    investments: 5000,
-    retirement401k: 6000,
-    healthSavings: 3000
+    income: 1500000, // 15 lakh INR
+    deductions: 250000, // 2.5 lakh INR
+    investments: 150000, // 1.5 lakh INR under 80C
+    pf: 180000, // 1.8 lakh PF contribution
+    healthInsurance: 25000 // 25k health insurance premium
   });
 
-  const [filingStatus, setFilingStatus] = useState('single');
+  const [filingStatus, setFilingStatus] = useState('individual');
 
-  // Tax brackets for 2024 (simplified)
+  // Indian Income Tax slabs for FY 2024-25 (New Tax Regime)
   const taxBrackets = [
-    { min: 0, max: 11000, rate: 10 },
-    { min: 11000, max: 44725, rate: 12 },
-    { min: 44725, max: 95375, rate: 22 },
-    { min: 95375, max: 182050, rate: 24 },
-    { min: 182050, max: 231250, rate: 32 },
-    { min: 231250, max: 578125, rate: 35 },
-    { min: 578125, max: Infinity, rate: 37 }
+    { min: 0, max: 300000, rate: 0 }, // No tax up to 3 lakh
+    { min: 300000, max: 700000, rate: 5 }, // 5% for 3-7 lakh
+    { min: 700000, max: 1000000, rate: 10 }, // 10% for 7-10 lakh
+    { min: 1000000, max: 1200000, rate: 15 }, // 15% for 10-12 lakh
+    { min: 1200000, max: 1500000, rate: 20 }, // 20% for 12-15 lakh
+    { min: 1500000, max: Infinity, rate: 30 } // 30% for above 15 lakh
   ];
 
   const calculateTax = () => {
-    const taxableIncome = Math.max(0, taxData.income - taxData.deductions - taxData.retirement401k);
+    const taxableIncome = Math.max(0, taxData.income - taxData.deductions - taxData.investments);
     let tax = 0;
 
     for (const bracket of taxBrackets) {
@@ -42,13 +42,17 @@ const TaxPlanner = () => {
       }
     }
 
+    // Add 4% Health and Education Cess on total tax
+    const cess = tax * 0.04;
+    const totalTax = tax + cess;
+
     return {
       taxableIncome,
-      totalTax: tax,
-      effectiveRate: (tax / taxData.income) * 100,
+      totalTax,
+      effectiveRate: (totalTax / taxData.income) * 100,
       marginalRate: getMarginalRate(taxableIncome),
-      afterTaxIncome: taxData.income - tax,
-      totalDeductions: taxData.deductions + taxData.retirement401k + taxData.healthSavings
+      afterTaxIncome: taxData.income - totalTax,
+      totalDeductions: taxData.deductions + taxData.investments + taxData.healthInsurance
     };
   };
 
@@ -65,28 +69,28 @@ const TaxPlanner = () => {
 
   const taxOptimizationSuggestions = [
     {
-      title: 'Maximize 401(k) Contributions',
-      description: 'Increase your 401(k) contribution to $23,000 (2024 limit)',
-      potentialSavings: 5520,
-      category: 'retirement'
-    },
-    {
-      title: 'Health Savings Account',
-      description: 'Maximize HSA contributions to $4,150 for individuals',
-      potentialSavings: 913,
-      category: 'health'
-    },
-    {
-      title: 'Tax-Loss Harvesting',
-      description: 'Offset capital gains with investment losses',
-      potentialSavings: 660,
+      title: 'Maximize 80C Deductions',
+      description: 'Increase investments under Section 80C to ₹1.5 lakh limit (EPF, PPF, ELSS, etc.)',
+      potentialSavings: 46500, // 31% of 1.5L
       category: 'investment'
     },
     {
-      title: 'Itemize Deductions',
-      description: 'Consider itemizing if total exceeds standard deduction',
-      potentialSavings: 840,
-      category: 'deduction'
+      title: 'Health Insurance Premium',
+      description: 'Claim up to ₹25,000 for health insurance premium under Section 80D',
+      potentialSavings: 7750,
+      category: 'health'
+    },
+    {
+      title: 'House Rent Allowance',
+      description: 'Claim HRA exemption if you are paying rent',
+      potentialSavings: 36000,
+      category: 'allowance'
+    },
+    {
+      title: 'National Pension System',
+      description: 'Additional ₹50,000 deduction under Section 80CCD(1B)',
+      potentialSavings: 15500,
+      category: 'retirement'
     }
   ];
 
@@ -107,7 +111,7 @@ const TaxPlanner = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Tax Owed</p>
-                <p className="text-2xl font-bold text-danger">${taxResults.totalTax.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-danger">{formatINR(taxResults.totalTax)}</p>
               </div>
               <FileText className="w-8 h-8 text-danger" />
             </div>
@@ -143,7 +147,7 @@ const TaxPlanner = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">After-Tax Income</p>
-                <p className="text-2xl font-bold text-success">${taxResults.afterTaxIncome.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-success">{formatINRLarge(taxResults.afterTaxIncome)}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-success" />
             </div>
@@ -159,7 +163,7 @@ const TaxPlanner = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Annual Income</Label>
+              <Label>Annual Income (₹)</Label>
               <Input
                 type="number"
                 value={taxData.income}
@@ -168,7 +172,7 @@ const TaxPlanner = () => {
             </div>
             
             <div>
-              <Label>Standard/Itemized Deductions</Label>
+              <Label>Standard Deduction (₹)</Label>
               <Input
                 type="number"
                 value={taxData.deductions}
@@ -177,28 +181,28 @@ const TaxPlanner = () => {
             </div>
             
             <div>
-              <Label>401(k) Contributions</Label>
+              <Label>80C Investments (₹)</Label>
               <Input
                 type="number"
-                value={taxData.retirement401k}
-                onChange={(e) => setTaxData({...taxData, retirement401k: parseFloat(e.target.value) || 0})}
+                value={taxData.investments}
+                onChange={(e) => setTaxData({...taxData, investments: parseFloat(e.target.value) || 0})}
               />
-              <Progress value={(taxData.retirement401k / 23000) * 100} className="mt-2" />
+              <Progress value={(taxData.investments / 150000) * 100} className="mt-2" />
               <p className="text-xs text-muted-foreground mt-1">
-                ${taxData.retirement401k} / $23,000 (2024 limit)
+                {formatINR(taxData.investments)} / ₹1,50,000 (2024-25 limit)
               </p>
             </div>
             
             <div>
-              <Label>HSA Contributions</Label>
+              <Label>Health Insurance Premium (₹)</Label>
               <Input
                 type="number"
-                value={taxData.healthSavings}
-                onChange={(e) => setTaxData({...taxData, healthSavings: parseFloat(e.target.value) || 0})}
+                value={taxData.healthInsurance}
+                onChange={(e) => setTaxData({...taxData, healthInsurance: parseFloat(e.target.value) || 0})}
               />
-              <Progress value={(taxData.healthSavings / 4150) * 100} className="mt-2" />
+              <Progress value={(taxData.healthInsurance / 25000) * 100} className="mt-2" />
               <p className="text-xs text-muted-foreground mt-1">
-                ${taxData.healthSavings} / $4,150 (2024 limit)
+                {formatINR(taxData.healthInsurance)} / ₹25,000 (80D limit)
               </p>
             </div>
           </CardContent>
@@ -215,7 +219,7 @@ const TaxPlanner = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Amount']} />
+                <Tooltip formatter={(value) => [formatINR(Number(value)), 'Amount']} />
                 <Bar dataKey="amount" fill="hsl(var(--primary))" />
               </BarChart>
             </ResponsiveContainer>
@@ -238,7 +242,7 @@ const TaxPlanner = () => {
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="font-semibold">{suggestion.title}</h4>
                   <Badge variant="outline">
-                    Save ${suggestion.potentialSavings}
+                    Save {formatINR(suggestion.potentialSavings)}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
@@ -256,30 +260,30 @@ const TaxPlanner = () => {
       {/* Tax Calendar */}
       <Card>
         <CardHeader>
-          <CardTitle>Important Tax Dates</CardTitle>
+          <CardTitle>Important Tax Dates (India)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 border rounded">
               <div>
-                <p className="font-medium">Tax Filing Deadline</p>
-                <p className="text-sm text-muted-foreground">File your 2023 tax return</p>
+                <p className="font-medium">ITR Filing Deadline</p>
+                <p className="text-sm text-muted-foreground">File your Income Tax Return for FY 2023-24</p>
               </div>
-              <Badge>April 15, 2024</Badge>
+              <Badge>July 31, 2024</Badge>
             </div>
             <div className="flex items-center justify-between p-3 border rounded">
               <div>
-                <p className="font-medium">Q1 Estimated Tax Payment</p>
-                <p className="text-sm text-muted-foreground">First quarter payment for 2024</p>
+                <p className="font-medium">Q1 Advance Tax</p>
+                <p className="text-sm text-muted-foreground">First installment for FY 2024-25</p>
               </div>
-              <Badge>April 15, 2024</Badge>
+              <Badge>June 15, 2024</Badge>
             </div>
             <div className="flex items-center justify-between p-3 border rounded">
               <div>
-                <p className="font-medium">Q2 Estimated Tax Payment</p>
-                <p className="text-sm text-muted-foreground">Second quarter payment for 2024</p>
+                <p className="font-medium">Q2 Advance Tax</p>
+                <p className="text-sm text-muted-foreground">Second installment for FY 2024-25</p>
               </div>
-              <Badge>June 17, 2024</Badge>
+              <Badge>September 15, 2024</Badge>
             </div>
           </div>
         </CardContent>

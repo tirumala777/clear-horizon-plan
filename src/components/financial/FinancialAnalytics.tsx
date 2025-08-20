@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart, Bar, Pie } from 'recharts';
+import { formatINR, formatINRLarge } from '@/services/financialDataService';
 
 interface Transaction {
   id: string;
@@ -127,7 +129,7 @@ const FinancialAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Income</p>
-                <p className="text-2xl font-bold text-success">${analytics.totalIncome.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-success">{formatINRLarge(analytics.totalIncome)}</p>
               </div>
               <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-success" />
@@ -141,7 +143,7 @@ const FinancialAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Expenses</p>
-                <p className="text-2xl font-bold text-danger">${analytics.totalExpenses.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-danger">{formatINRLarge(analytics.totalExpenses)}</p>
               </div>
               <div className="w-10 h-10 bg-danger/10 rounded-lg flex items-center justify-center">
                 <TrendingDown className="w-5 h-5 text-danger" />
@@ -156,7 +158,7 @@ const FinancialAnalytics = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Net Income</p>
                 <p className={`text-2xl font-bold ${analytics.netIncome >= 0 ? 'text-success' : 'text-danger'}`}>
-                  ${analytics.netIncome.toFixed(2)}
+                  {formatINRLarge(analytics.netIncome)}
                 </p>
               </div>
               <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -202,8 +204,12 @@ const FinancialAnalytics = () => {
                 <LineChart data={analytics.monthlyTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))" 
+                    tickFormatter={(value) => formatINRLarge(value)}
+                  />
                   <Tooltip 
+                    formatter={(value) => [formatINR(Number(value)), '']}
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
@@ -247,7 +253,7 @@ const FinancialAnalytics = () => {
                         ))}
                       </Pie>
                       <Tooltip 
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+                        formatter={(value: number) => [formatINR(value), 'Amount']}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
@@ -268,7 +274,7 @@ const FinancialAnalytics = () => {
                         <span className="text-sm">{category.name}</span>
                       </div>
                       <div className="text-sm font-medium">
-                        ${category.value.toFixed(2)} ({category.percentage}%)
+                        {formatINR(category.value)} ({category.percentage}%)
                       </div>
                     </div>
                   ))}
@@ -315,7 +321,7 @@ const FinancialAnalytics = () => {
               <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
                 <h4 className="font-semibold text-primary mb-2">📊 Category Insights</h4>
                 <p className="text-sm">
-                  Your highest expense category is {categoryData[0]?.name} at ${categoryData[0]?.value.toFixed(2)} 
+                  Your highest expense category is {categoryData[0]?.name} at {formatINR(categoryData[0]?.value)} 
                   ({categoryData[0]?.percentage}% of total expenses).
                 </p>
               </div>

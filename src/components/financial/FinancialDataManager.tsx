@@ -16,7 +16,8 @@ import {
   updateTransaction,
   deleteTransaction,
   Transaction,
-  validateTransaction
+  validateTransaction,
+  formatINR
 } from '@/services/financialDataService';
 
 const FinancialDataManager = () => {
@@ -179,7 +180,7 @@ const FinancialDataManager = () => {
               />
             </div>
             <div>
-              <Label htmlFor="amount">Amount *</Label>
+              <Label htmlFor="amount">Amount (₹) *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -288,7 +289,7 @@ const FinancialDataManager = () => {
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{transaction.description}</span>
                           <span className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                            {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                            {transaction.type === 'income' ? '+' : '-'}{formatINR(transaction.amount)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
