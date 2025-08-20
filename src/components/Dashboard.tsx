@@ -20,19 +20,29 @@ const Dashboard = () => {
   const [animatedValue, setAnimatedValue] = useState(0);
   const [currentMetric, setCurrentMetric] = useState(0);
 
+  // Updated mock data with INR values
   const mockData = [
-    { month: 'Jan', revenue: 45000, users: 1200 },
-    { month: 'Feb', revenue: 52000, users: 1380 },
-    { month: 'Mar', revenue: 48000, users: 1250 },
-    { month: 'Apr', revenue: 61000, users: 1590 },
-    { month: 'May', revenue: 55000, users: 1420 },
-    { month: 'Jun', revenue: 67000, users: 1740 },
+    { month: 'Jan', revenue: 3750000, users: 1200 }, // 37.5 lakh
+    { month: 'Feb', revenue: 4300000, users: 1380 }, // 43 lakh
+    { month: 'Mar', revenue: 4000000, users: 1250 }, // 40 lakh
+    { month: 'Apr', revenue: 5100000, users: 1590 }, // 51 lakh
+    { month: 'May', revenue: 4600000, users: 1420 }, // 46 lakh
+    { month: 'Jun', revenue: 5600000, users: 1740 }, // 56 lakh
   ];
+
+  const formatINR = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const metrics = [
     { 
       title: "Monthly Revenue", 
-      value: 67000, 
+      value: 5600000, // 56 lakh
       change: "+25%", 
       icon: DollarSign,
       color: "text-success",
@@ -69,13 +79,13 @@ const Dashboard = () => {
       setCurrentMetric((prev) => (prev + 1) % metrics.length);
     }, 3000);
 
-    // Animate revenue counter
+    // Animate revenue counter for INR
     const revenueInterval = setInterval(() => {
       setAnimatedValue((prev) => {
-        if (prev < 67000) {
-          return prev + 2000;
+        if (prev < 5600000) {
+          return prev + 150000; // Increment by 1.5 lakh
         }
-        return 67000;
+        return 5600000;
       });
     }, 50);
 
@@ -144,7 +154,7 @@ const Dashboard = () => {
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {metric.title === "Monthly Revenue" 
-                          ? `$${animatedValue.toLocaleString()}`
+                          ? formatINR(animatedValue)
                           : metric.value.toLocaleString()
                         }
                         {metric.title === "Conversion Rate" && "%"}
@@ -180,7 +190,10 @@ const Dashboard = () => {
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <YAxis 
+                          stroke="hsl(var(--muted-foreground))" 
+                          tickFormatter={(value) => `₹${(value / 100000).toFixed(0)}L`}
+                        />
                         <Area 
                           type="monotone" 
                           dataKey="revenue" 

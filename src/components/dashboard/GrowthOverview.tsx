@@ -5,17 +5,27 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, DollarSign, Users, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
+// Updated mock data with INR values
 const mockData = [
-  { month: 'Jan', revenue: 45000, expenses: 32000, growth: 12 },
-  { month: 'Feb', revenue: 52000, expenses: 35000, growth: 15 },
-  { month: 'Mar', revenue: 48000, expenses: 33000, growth: 8 },
-  { month: 'Apr', revenue: 61000, expenses: 38000, growth: 22 },
-  { month: 'May', revenue: 55000, expenses: 36000, growth: 18 },
-  { month: 'Jun', revenue: 67000, expenses: 40000, growth: 25 },
+  { month: 'Jan', revenue: 3750000, expenses: 2650000, growth: 12 }, // 37.5L revenue, 26.5L expenses
+  { month: 'Feb', revenue: 4300000, expenses: 2900000, growth: 15 }, // 43L revenue, 29L expenses
+  { month: 'Mar', revenue: 4000000, expenses: 2750000, growth: 8 },  // 40L revenue, 27.5L expenses
+  { month: 'Apr', revenue: 5100000, expenses: 3150000, growth: 22 }, // 51L revenue, 31.5L expenses
+  { month: 'May', revenue: 4600000, expenses: 3000000, growth: 18 }, // 46L revenue, 30L expenses
+  { month: 'Jun', revenue: 5600000, expenses: 3300000, growth: 25 }, // 56L revenue, 33L expenses
 ];
 
 const GrowthOverview = () => {
   const [viewMode, setViewMode] = useState<'revenue' | 'growth'>('revenue');
+
+  const formatINR = (value: number) => {
+    if (value >= 10000000) { // 1 crore
+      return `₹${(value / 10000000).toFixed(1)}Cr`;
+    } else if (value >= 100000) { // 1 lakh
+      return `₹${(value / 100000).toFixed(1)}L`;
+    }
+    return `₹${(value / 1000).toFixed(0)}K`;
+  };
 
   return (
     <div className="space-y-6">
@@ -43,7 +53,7 @@ const GrowthOverview = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-success-foreground/80 text-sm">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-success-foreground">$67,000</p>
+                <p className="text-2xl font-bold text-success-foreground">₹56,00,000</p>
                 <p className="text-success-foreground/80 text-sm">+25% from last month</p>
               </div>
               <DollarSign className="h-8 w-8 text-success-foreground/80" />
@@ -83,7 +93,7 @@ const GrowthOverview = () => {
               <div>
                 <p className="text-muted-foreground text-sm">Goal Progress</p>
                 <p className="text-2xl font-bold">78%</p>
-                <p className="text-warning text-sm">$100K target</p>
+                <p className="text-warning text-sm">₹83L target</p>
               </div>
               <Target className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -108,7 +118,7 @@ const GrowthOverview = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatINR} />
                   <Area 
                     type="monotone" 
                     dataKey="revenue" 

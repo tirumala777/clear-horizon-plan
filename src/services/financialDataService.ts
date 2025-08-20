@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -45,6 +44,28 @@ export interface PortfolioHolding {
   purchase_date: string;
   user_id?: string;
 }
+
+// Currency formatting utility for Indian Rupees
+export const formatINR = (amount: number): string => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Large number formatting for Indian numbering system (lakhs, crores)
+export const formatINRLarge = (amount: number): string => {
+  if (amount >= 10000000) { // 1 crore
+    return `₹${(amount / 10000000).toFixed(1)}Cr`;
+  } else if (amount >= 100000) { // 1 lakh
+    return `₹${(amount / 100000).toFixed(1)}L`;
+  } else if (amount >= 1000) { // 1 thousand
+    return `₹${(amount / 1000).toFixed(1)}K`;
+  }
+  return formatINR(amount);
+};
 
 // Type guards for runtime validation
 const isValidTransactionType = (type: string): type is 'income' | 'expense' => {
