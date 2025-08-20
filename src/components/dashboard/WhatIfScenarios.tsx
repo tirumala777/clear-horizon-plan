@@ -11,9 +11,18 @@ const WhatIfScenarios = () => {
   const [staffingChange, setStaffingChange] = useState([0]);
   const [pricingChange, setPricingChange] = useState([0]);
 
+  const formatINR = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const calculateImpact = () => {
-    const baseRevenue = 67000;
-    const baseProfit = 27000;
+    const baseRevenue = 5600000; // 56 lakh INR
+    const baseProfit = 2300000; // 23 lakh INR
     
     // Simple calculations for demo
     const revenueImpact = (adSpendChange[0] * 0.8) + (pricingChange[0] * 1.2);
@@ -101,7 +110,7 @@ const WhatIfScenarios = () => {
               </div>
             </div>
             <p className="text-2xl font-bold">
-              ${impact.newRevenue.toLocaleString()}
+              {formatINR(impact.newRevenue)}
             </p>
           </div>
 
@@ -120,7 +129,7 @@ const WhatIfScenarios = () => {
               </div>
             </div>
             <p className="text-2xl font-bold">
-              ${impact.newProfit.toLocaleString()}
+              {formatINR(impact.newProfit)}
             </p>
           </div>
         </div>

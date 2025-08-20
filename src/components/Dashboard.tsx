@@ -39,6 +39,15 @@ const Dashboard = () => {
     }).format(amount);
   };
 
+  const formatINRLarge = (amount: number) => {
+    if (amount >= 10000000) { // 1 crore
+      return `₹${(amount / 10000000).toFixed(1)}Cr`;
+    } else if (amount >= 100000) { // 1 lakh
+      return `₹${(amount / 100000).toFixed(1)}L`;
+    }
+    return formatINR(amount);
+  };
+
   const metrics = [
     { 
       title: "Monthly Revenue", 
@@ -154,7 +163,7 @@ const Dashboard = () => {
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {metric.title === "Monthly Revenue" 
-                          ? formatINR(animatedValue)
+                          ? formatINRLarge(animatedValue)
                           : metric.value.toLocaleString()
                         }
                         {metric.title === "Conversion Rate" && "%"}
