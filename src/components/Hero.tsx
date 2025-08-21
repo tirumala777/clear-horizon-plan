@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,15 +12,13 @@ import {
   Target,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import AnimatedBackground from "@/components/ui/animated-background";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-1/2 -left-1/2 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Animated Background */}
+      <AnimatedBackground />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
@@ -86,17 +85,6 @@ const Hero = () => {
             </Card>
           </div>
         </div>
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute top-1/4 left-10 animate-bounce delay-300">
-        <div className="w-4 h-4 bg-primary/30 rounded-full"></div>
-      </div>
-      <div className="absolute top-1/3 right-16 animate-bounce delay-700">
-        <div className="w-3 h-3 bg-secondary/30 rounded-full"></div>
-      </div>
-      <div className="absolute bottom-1/4 left-1/4 animate-bounce delay-500">
-        <div className="w-2 h-2 bg-success/30 rounded-full"></div>
       </div>
     </section>
   );
