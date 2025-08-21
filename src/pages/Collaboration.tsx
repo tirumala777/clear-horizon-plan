@@ -30,7 +30,7 @@ const Collaboration = () => {
       <div className="relative overflow-hidden bg-gradient-to-r from-secondary via-secondary-light to-primary">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
-          <div className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M20 20c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm-20-18c9.941 0 18 8.059 18 18s-8.059 18-18 18-18-8.059-18-18 8.059-18 18-18z"/%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+          <div className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg width=\"40\" height=\"40\" viewBox=\"0 0 40 40\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Cpath d=\"M20 20c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm-20-18c9.941 0 18 8.059 18 18s-8.059 18-18 18-18-8.059-18-18 8.059-18 18-18z\"/%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
         </div>
         
         <div className="relative container mx-auto px-4 py-20">
