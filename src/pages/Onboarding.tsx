@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import FinancialDataStep from '@/components/onboarding/FinancialDataStep';
 import GoalsVisionStep from '@/components/onboarding/GoalsVisionStep';
 import CompletionStep from '@/components/onboarding/CompletionStep';
 import AdBanner from '@/components/advertisements/AdBanner';
+import ReferralStep from '@/components/onboarding/ReferralStep';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -20,14 +20,16 @@ const Onboarding = () => {
     companySize: '',
     monthlyRevenue: '',
     goals: '',
-    challenges: ''
+    challenges: '',
+    referralCode: ''
   });
 
   const steps = [
-    { id: 1, title: 'Company Info', icon: Building },
-    { id: 2, title: 'Financial Data', icon: DollarSign },
-    { id: 3, title: 'Goals & Vision', icon: Target },
-    { id: 4, title: 'Data Integration', icon: Upload }
+    { id: 1, title: 'Referral Code', icon: Building },
+    { id: 2, title: 'Company Info', icon: Building },
+    { id: 3, title: 'Financial Data', icon: DollarSign },
+    { id: 4, title: 'Goals & Vision', icon: Target },
+    { id: 5, title: 'Complete Setup', icon: Upload }
   ];
 
   const updateFormData = (data: Partial<typeof formData>) => {
@@ -35,7 +37,7 @@ const Onboarding = () => {
   };
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     } else {
       navigate('/dashboard');
@@ -51,12 +53,14 @@ const Onboarding = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <CompanyInfoStep formData={formData} updateFormData={updateFormData} />;
+        return <ReferralStep formData={formData} updateFormData={updateFormData} />;
       case 2:
-        return <FinancialDataStep formData={formData} updateFormData={updateFormData} />;
+        return <CompanyInfoStep formData={formData} updateFormData={updateFormData} />;
       case 3:
-        return <GoalsVisionStep formData={formData} updateFormData={updateFormData} />;
+        return <FinancialDataStep formData={formData} updateFormData={updateFormData} />;
       case 4:
+        return <GoalsVisionStep formData={formData} updateFormData={updateFormData} />;
+      case 5:
         return <CompletionStep />;
       default:
         return null;
@@ -74,7 +78,7 @@ const Onboarding = () => {
         <AdBanner />
 
         <div className="mb-8">
-          <Progress value={(currentStep / 4) * 100} className="h-2" />
+          <Progress value={(currentStep / 5) * 100} className="h-2" />
           <div className="flex justify-between mt-4">
             {steps.map((step) => {
               const IconComponent = step.icon;
@@ -94,7 +98,7 @@ const Onboarding = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Step {currentStep} of 4: {steps[currentStep - 1].title}</CardTitle>
+            <CardTitle>Step {currentStep} of 5: {steps[currentStep - 1].title}</CardTitle>
           </CardHeader>
           <CardContent>
             {renderStep()}
@@ -107,7 +111,7 @@ const Onboarding = () => {
                 Previous
               </Button>
               <Button onClick={handleNext}>
-                {currentStep === 4 ? 'Get Started' : 'Next'}
+                {currentStep === 5 ? 'Get Started' : 'Next'}
               </Button>
             </div>
           </CardContent>
