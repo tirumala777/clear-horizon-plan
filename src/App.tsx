@@ -12,6 +12,7 @@ import Collaboration from "./pages/Collaboration";
 import Gamification from "./pages/Gamification";
 import Onboarding from "./pages/Onboarding";
 import FinancialPlatform from "./pages/FinancialPlatform";
+import ThreeDashboard from "./pages/ThreeDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/3d-dashboard" element={<ThreeDashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/collaboration" element={<Collaboration />} />
             <Route path="/gamification" element={<Gamification />} />
