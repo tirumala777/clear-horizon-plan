@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +13,11 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import AnimatedBackground from "@/components/ui/animated-background";
+import VideoDemo from "@/components/VideoDemo";
 
 const Hero = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Background */}
@@ -44,7 +47,12 @@ const Hero = () => {
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="group px-8 py-4 text-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-400/30 hover:border-blue-400/50">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="group px-8 py-4 text-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-400/30 hover:border-blue-400/50"
+              onClick={() => setIsVideoOpen(true)}
+            >
               <Play className="w-5 h-5 mr-2" />
               Watch Demo
             </Button>
@@ -84,6 +92,12 @@ const Hero = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Demo Modal */}
+      <VideoDemo 
+        isOpen={isVideoOpen} 
+        onClose={() => setIsVideoOpen(false)} 
+      />
     </section>
   );
 };
