@@ -8,7 +8,7 @@ export interface UserProfile {
   industry?: string;
   company_size?: string;
   founded_date?: string;
-  business_stage?: 'startup' | 'growth' | 'mature' | 'enterprise';
+  business_stage?: string;
   monthly_revenue?: number;
   employee_count?: number;
   location?: string;

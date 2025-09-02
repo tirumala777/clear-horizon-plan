@@ -25,7 +25,7 @@ export interface MLInsight {
   title: string;
   description: string;
   confidence_score?: number;
-  impact_level?: 'low' | 'medium' | 'high' | 'critical';
+  impact_level?: string;
   recommendation?: string;
   data_sources?: string[];
   model_version?: string;
@@ -43,7 +43,7 @@ export interface ExternalIntegration {
   last_updated?: string;
   data_quality_score?: number;
   usage_count: number;
-  status: 'active' | 'inactive' | 'error';
+  status: string;
 }
 
 // Business Metrics Management
