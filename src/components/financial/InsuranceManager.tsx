@@ -13,7 +13,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getInsurancePolicies,
   createInsurancePolicy,
-  InsurancePolicy
+  InsurancePolicy,
+  formatINR
 } from '@/services/financialDataService';
 
 const InsuranceManager = () => {
@@ -159,7 +160,7 @@ const InsuranceManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Premiums</p>
-                <p className="text-2xl font-bold">${getTotalPremiums().toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatINR(getTotalPremiums())}</p>
               </div>
               <Shield className="w-8 h-8 text-primary" />
             </div>
@@ -171,7 +172,7 @@ const InsuranceManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Coverage</p>
-                <p className="text-2xl font-bold">${getTotalCoverage().toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatINR(getTotalCoverage())}</p>
               </div>
               <Shield className="w-8 h-8 text-primary" />
             </div>
@@ -317,13 +318,13 @@ const InsuranceManager = () => {
                     <div>
                       <p className="text-muted-foreground">Premium</p>
                       <p className="font-medium">
-                        {insurance.premium_amount ? `$${insurance.premium_amount}/month` : 'Not set'}
+                        {insurance.premium_amount ? `${formatINR(insurance.premium_amount)}/month` : 'Not set'}
                       </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Coverage</p>
                       <p className="font-medium">
-                        {insurance.coverage_amount ? `$${insurance.coverage_amount.toLocaleString()}` : 'Not set'}
+                        {insurance.coverage_amount ? formatINR(insurance.coverage_amount) : 'Not set'}
                       </p>
                     </div>
                   </div>

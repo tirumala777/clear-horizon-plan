@@ -6,7 +6,7 @@ import { TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Target } fro
 const metrics = [
   {
     title: 'Total Revenue',
-    value: '$127,540',
+    value: '₹12,75,400',
     change: '+12.5%',
     trend: 'up',
     icon: DollarSign
