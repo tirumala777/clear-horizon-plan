@@ -28,6 +28,7 @@ import TaxPlanner from '@/components/financial/TaxPlanner';
 import PortfolioTracker from '@/components/financial/PortfolioTracker';
 import CollaborationHub from '@/components/financial/CollaborationHub';
 import AdBanner from '@/components/advertisements/AdBanner';
+import { formatINR, formatINRLarge } from '@/services/financialDataService';
 
 const FinancialPlatform = () => {
   const { user, loading } = useAuth();
@@ -113,10 +114,10 @@ const FinancialPlatform = () => {
   ];
 
   const quickStats = [
-    { label: 'Total Portfolio Value', value: '$94,750.00', change: '+8.2%', icon: DollarSign, trend: 'up' },
-    { label: 'Monthly Spending', value: '$2,840.00', change: '-8.1%', icon: TrendingUp, trend: 'down' },
-    { label: 'Tax Savings YTD', value: '$5,200.00', change: '+15.3%', icon: Calculator, trend: 'up' },
-    { label: 'Insurance Coverage', value: '$550K', change: 'Active', icon: Shield, trend: 'neutral' }
+    { label: 'Total Portfolio Value', value: '₹78,75,000', change: '+8.2%', icon: DollarSign, trend: 'up' },
+    { label: 'Monthly Spending', value: '₹2,36,320', change: '-8.1%', icon: TrendingUp, trend: 'down' },
+    { label: 'Tax Savings YTD', value: '₹4,32,800', change: '+15.3%', icon: Calculator, trend: 'up' },
+    { label: 'Insurance Coverage', value: '₹4.58Cr', change: 'Active', icon: Shield, trend: 'neutral' }
   ];
 
   return (
