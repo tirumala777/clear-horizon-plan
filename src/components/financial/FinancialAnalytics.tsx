@@ -41,6 +41,18 @@ const FinancialAnalytics = () => {
       setTransactions(parsedTransactions);
       calculateAnalytics(parsedTransactions);
     }
+
+    // Set up real-time updates - refresh data every 10 seconds
+    const interval = setInterval(() => {
+      const currentSavedTransactions = localStorage.getItem('financial_transactions');
+      if (currentSavedTransactions) {
+        const currentParsedTransactions = JSON.parse(currentSavedTransactions);
+        setTransactions(currentParsedTransactions);
+        calculateAnalytics(currentParsedTransactions);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const calculateAnalytics = (transactionData: Transaction[]) => {

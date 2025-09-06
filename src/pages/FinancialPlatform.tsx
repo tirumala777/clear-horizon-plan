@@ -13,6 +13,7 @@ import {
   Target, 
   Settings,
   TrendingUp,
+  TrendingDown,
   DollarSign,
   PieChart,
   Calculator,
@@ -26,13 +27,24 @@ import SecuritySettings from '@/components/financial/SecuritySettings';
 import InsuranceManager from '@/components/financial/InsuranceManager';
 import TaxPlanner from '@/components/financial/TaxPlanner';
 import PortfolioTracker from '@/components/financial/PortfolioTracker';
+import RealTimePortfolioTracker from '@/components/financial/RealTimePortfolioTracker';
 import CollaborationHub from '@/components/financial/CollaborationHub';
 import AdBanner from '@/components/advertisements/AdBanner';
+import UPITransactionDashboard from '@/components/financial/UPITransactionDashboard';
 import { formatINR, formatINRLarge } from '@/services/financialDataService';
+import { useQuery } from '@tanstack/react-query';
+import { getBusinessMetrics } from '@/services/businessIntelligenceService';
 
 const FinancialPlatform = () => {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Fetch real-time business metrics
+  const { data: metrics = [], isLoading: metricsLoading } = useQuery({
+    queryKey: ['financial-platform-metrics'],
+    queryFn: () => getBusinessMetrics(),
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
 
   if (loading) {
     return (
@@ -113,11 +125,43 @@ const FinancialPlatform = () => {
     }
   ];
 
+  // Real-time quick stats with live data
+  const latestMetric = metrics[0];
+  const hasRealData = !metricsLoading && latestMetric;
+
   const quickStats = [
-    { label: 'Total Portfolio Value', value: '₹78,75,000', change: '+8.2%', icon: DollarSign, trend: 'up' },
-    { label: 'Monthly Spending', value: '₹2,36,320', change: '-8.1%', icon: TrendingUp, trend: 'down' },
-    { label: 'Tax Savings YTD', value: '₹4,32,800', change: '+15.3%', icon: Calculator, trend: 'up' },
-    { label: 'Insurance Coverage', value: '₹4.58Cr', change: 'Active', icon: Shield, trend: 'neutral' }
+    { 
+      label: 'Total Portfolio Value', 
+      value: hasRealData ? formatINR(latestMetric.revenue || 0) : '₹78,75,000', 
+      change: hasRealData && latestMetric.growth_rate ? `+${latestMetric.growth_rate}%` : '+8.2%', 
+      icon: DollarSign, 
+      trend: 'up',
+      isLive: hasRealData
+    },
+    { 
+      label: 'Monthly Spending', 
+      value: hasRealData ? formatINR(latestMetric.expenses || 0) : '₹2,36,320', 
+      change: '-8.1%', 
+      icon: TrendingUp, 
+      trend: 'down',
+      isLive: hasRealData
+    },
+    { 
+      label: 'Profit Margin', 
+      value: hasRealData && latestMetric.profit_margin ? `${latestMetric.profit_margin}%` : '15.3%', 
+      change: '+15.3%', 
+      icon: Calculator, 
+      trend: 'up',
+      isLive: hasRealData
+    },
+    { 
+      label: 'Cash Flow', 
+      value: hasRealData ? formatINR(latestMetric.cash_flow || 0) : '₹4.58Cr', 
+      change: 'Live', 
+      icon: Shield, 
+      trend: 'neutral',
+      isLive: hasRealData
+    }
   ];
 
   return (
@@ -139,33 +183,47 @@ const FinancialPlatform = () => {
             </p>
           </div>
 
-          {/* Quick Stats */}
+          {/* Real-Time Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {quickStats.map((stat, index) => {
               const IconComponent = stat.icon;
               return (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
+                <Card key={index} className={`hover:shadow-lg transition-all duration-300 relative overflow-hidden ${stat.isLive ? 'ring-2 ring-green-500/20' : ''}`}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground">{stat.label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground">{stat.label}</p>
+                          {stat.isLive && (
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
                         <p className="text-2xl font-bold">{stat.value}</p>
                         {stat.trend !== 'neutral' && (
                           <Badge variant={stat.trend === 'up' ? 'default' : 'secondary'} className="mt-1">
+                            {stat.isLive && stat.trend === 'up' && <TrendingUp className="w-3 h-3 mr-1" />}
+                            {stat.isLive && stat.trend === 'down' && <TrendingDown className="w-3 h-3 mr-1" />}
                             {stat.change}
                           </Badge>
                         )}
                         {stat.trend === 'neutral' && (
                           <Badge variant="outline" className="mt-1">
+                            {stat.isLive && <Target className="w-3 h-3 mr-1" />}
                             {stat.change}
                           </Badge>
                         )}
+                        {stat.isLive && (
+                          <p className="text-xs text-green-600 mt-1">Live Data</p>
+                        )}
                       </div>
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <div className={`w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center ${stat.isLive ? 'animate-pulse' : ''}`}>
                         <IconComponent className="w-6 h-6 text-primary" />
                       </div>
                     </div>
                   </CardContent>
+                  {stat.isLive && (
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-blue-500 animate-pulse"></div>
+                  )}
                 </Card>
               );
             })}
@@ -174,9 +232,10 @@ const FinancialPlatform = () => {
           {/* Main Platform Interface */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
             <div className="flex items-center justify-between">
-              <TabsList className="grid w-full max-w-4xl grid-cols-8">
+              <TabsList className="grid w-full max-w-5xl grid-cols-9">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                <TabsTrigger value="upi">UPI Live</TabsTrigger>
                 <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="tax">Tax Planning</TabsTrigger>
@@ -291,9 +350,14 @@ const FinancialPlatform = () => {
               <FinancialDataManager />
             </TabsContent>
 
+            {/* UPI Live Transactions Tab */}
+            <TabsContent value="upi">
+              <UPITransactionDashboard />
+            </TabsContent>
+
             {/* Portfolio Tab */}
             <TabsContent value="portfolio">
-              <PortfolioTracker />
+              <RealTimePortfolioTracker />
             </TabsContent>
 
             {/* Analytics Tab */}
