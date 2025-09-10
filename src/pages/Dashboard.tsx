@@ -10,6 +10,8 @@ import MilestoneTracker from '@/components/dashboard/MilestoneTracker';
 import RealTimeMetrics from '@/components/dashboard/RealTimeMetrics';
 import MLInsightsDashboard from '@/components/ml/MLInsightsDashboard';
 import FileUpload from '@/components/dashboard/FileUpload';
+import RealTimeDataProcessor from '@/components/dashboard/RealTimeDataProcessor';
+import LiveMetricsChart from '@/components/dashboard/LiveMetricsChart';
 import { useJourneyTracking } from '@/hooks/useJourneyTracking';
 
 const Dashboard = () => {
@@ -47,6 +49,12 @@ const Dashboard = () => {
           <GrowthOverview />
           <RevenueChart />
         </div>
+        
+        {/* ML Data Processing */}
+        <RealTimeDataProcessor />
+        
+        {/* Live Metrics Charts */}
+        <LiveMetricsChart />
         
         {/* File Upload and ML Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
