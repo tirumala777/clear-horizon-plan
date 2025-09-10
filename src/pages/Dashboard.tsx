@@ -9,6 +9,7 @@ import AIInsights from '@/components/dashboard/AIInsights';
 import MilestoneTracker from '@/components/dashboard/MilestoneTracker';
 import RealTimeMetrics from '@/components/dashboard/RealTimeMetrics';
 import MLInsightsDashboard from '@/components/ml/MLInsightsDashboard';
+import FileUpload from '@/components/dashboard/FileUpload';
 import { useJourneyTracking } from '@/hooks/useJourneyTracking';
 
 const Dashboard = () => {
@@ -47,11 +48,14 @@ const Dashboard = () => {
           <RevenueChart />
         </div>
         
-        {/* ML Insights and AI Insights */}
+        {/* File Upload and ML Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <FileUpload />
           <MLInsightsDashboard />
-          <AIInsights />
         </div>
+        
+        {/* AI Insights */}
+        <AIInsights />
         
         {/* Milestone Tracker */}
         <MilestoneTracker />
