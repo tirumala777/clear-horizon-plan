@@ -56,7 +56,7 @@ export const generateMockUPITransaction = (): Omit<UPITransaction, 'id' | 'user_
 // Real-time transaction simulation
 export class UPITransactionStream {
   private listeners: ((transaction: UPITransaction) => void)[] = [];
-  private interval: NodeJS.Timeout | null = null;
+  private interval: ReturnType<typeof setInterval> | null = null;
   
   start() {
     this.interval = setInterval(() => {

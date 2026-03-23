@@ -36,13 +36,19 @@ export interface InsurancePolicy {
 
 export interface PortfolioHolding {
   id: string;
-  symbol: string;
-  name: string;
-  shares: number;
+  asset_name: string;
+  asset_type: string;
+  quantity: number;
   purchase_price: number;
   current_price: number;
   purchase_date: string;
+  exchange?: string;
+  notes?: string;
   user_id?: string;
+  // Aliases for backward compatibility
+  symbol?: string;
+  name?: string;
+  shares?: number;
 }
 
 // Currency formatting utility for Indian Rupees
