@@ -16,10 +16,32 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const getAuthErrorMessage = (message: string, loginMode: boolean) => {
+    if (message.includes('Invalid login credentials')) {
+      return loginMode
+        ? 'Invalid email or password. If this is a new account, please sign up first.'
+        : 'Could not create account with these credentials. Please verify your details and try again.';
+    }
+
+    if (message.includes('Email not confirmed')) {
+      return 'Please verify your email from your inbox before signing in.';
+    }
+
+    if (message.includes('User already registered')) {
+      return 'This email is already registered. Please sign in instead.';
+    }
+
+    if (message.includes('Password should be at least')) {
+      return 'Password must be at least 6 characters long.';
+    }
+
+    return message;
+  };
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -30,59 +52,78 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.trim() || !password.trim()) {
+      toast({
+        title: 'Missing fields',
+        description: 'Please enter both email and password.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: 'Weak password',
+        description: 'Password must be at least 6 characters long.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(email.trim(), password);
         if (error) {
           toast({
-            title: "Login failed",
-            description: error.message,
-            variant: "destructive",
+            title: 'Login failed',
+            description: getAuthErrorMessage(error.message, true),
+            variant: 'destructive',
           });
         } else {
           toast({
-            title: "Welcome back!",
-            description: "You have successfully logged in.",
+            title: 'Welcome back!',
+            description: 'You have successfully logged in.',
           });
         }
       } else {
         if (!fullName.trim()) {
           toast({
-            title: "Name required",
-            description: "Please enter your full name.",
-            variant: "destructive",
+            title: 'Name required',
+            description: 'Please enter your full name.',
+            variant: 'destructive',
           });
           return;
         }
-        
-        const { error } = await signUp(email, password, fullName);
+
+        const { error } = await signUp(email.trim(), password, fullName.trim());
         if (error) {
           toast({
-            title: "Sign up failed",
-            description: error.message,
-            variant: "destructive",
+            title: 'Sign up failed',
+            description: getAuthErrorMessage(error.message, false),
+            variant: 'destructive',
           });
         } else {
           toast({
-            title: "Account created!",
-            description: "Please check your email to verify your account.",
+            title: 'Account created!',
+            description: 'Please check your email to verify your account, then sign in.',
           });
           setIsLogin(true);
+          setPassword('');
         }
       }
-    } catch (error) {
+    } catch {
       toast({
-        title: "An error occurred",
-        description: "Please try again later.",
-        variant: "destructive",
+        title: 'An error occurred',
+        description: 'Please try again later.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
